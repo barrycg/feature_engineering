@@ -1,2 +1,2 @@
 # feature_engineering
-recording relational examples
+recording relational examples from <feature engineering for ML>
