@@ -22,11 +22,12 @@ import json
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-def visualization():
+def visualization(biz_df):
+    '''
     biz_file=open('data/yelp_academic_dataset.json')
     biz_df=pd.DataFrame(json.loads(x) for x in biz_file.readlines())
     biz_file.close()
-    
+    '''
 #plot the histogram of the review counts
     sns.set_style('whitegrid')
     fig, ax = plt.subplots()
@@ -47,10 +48,12 @@ def quantizingwithfixedwidthbins():
     np.floor(np.log10(large_counts))
     
 # 分数位装箱
-def quantile_binning():
+def quantile_binning(biz_df):
+    '''
     biz_file=open('data/yelp_academic_dataset.json')
     biz_df=pd.DataFrame(json.loads(x) for x in biz_file.readlines())
     biz_file.close()
+    '''
     deciles = biz_df['review_count'].quantile([.1, .2, .3, .4, .5, .6, .7, .8, .9])
     
 ### visualize the deciles on the histogram
@@ -75,11 +78,12 @@ def binningcountsbyquantiles():
     
     
 ###log Transformation
-def Visualizationoflogtransformation():
+def Visualizationoflogtransformation(biz_df):
+    '''
     biz_file=open('data/yelp_academic_dataset.json')
     biz_df=pd.DataFrame(json.loads(x) for x in biz_file.readlines())
     biz_file.close()
-    
+    '''
     fig, (ax1, ax2) = plt.subplots(2, 1)
     
     biz_df['review_count'].hist(ax=ax1, bins=100)
@@ -112,12 +116,12 @@ from sklearn import linear_model
 from sklearn.model_selection import cross_val_score
 
 ##errorrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr
-def predictbusinessratingsbyLT():
-    
+def predictbusinessratingsbyLT(biz_df):
+    '''
     biz_file=open('data/yelp_academic_dataset.json')
     biz_df=pd.DataFrame(json.loads(x) for x in biz_file.readlines())
     biz_file.close()
-    
+    '''
     biz_df['log_review_count'] = np.log10(biz_df['review_count'] + 1)
     
     m_orig = linear_model.LinearRegression()
@@ -153,6 +157,7 @@ def predictarticlepopularitybyLT():
 def visualizingchangeofpopularity():
     
     df = pd.read_csv('data/OnlineNewsPopularity.csv', delimiter=', ', engine='python')
+    
     fig2, (ax1, ax2) = plt.subplots(2,1)
     ax1.scatter(df['n_tokens_content'], df['shares'])
     ax1.tick_params(labelsize=14)
@@ -164,11 +169,12 @@ def visualizingchangeofpopularity():
     ax2.set_xlabel('Log of the Number of Words in Article', fontsize=14)
     ax2.set_ylabel('Number of Shares', fontsize=14)
     
-def visualizaingchangeofprediction():
+def visualizaingchangeofprediction(biz_df):
+    '''
     biz_file=open('data/yelp_academic_dataset.json')
     biz_df=pd.DataFrame(json.loads(x) for x in biz_file.readlines())
     biz_file.close()
-    
+    '''
     fig, (ax1, ax2) = plt.subplots(2,1)
     ax1.scatter(biz_df['review_count'], biz_df['stars'])
     ax1.tick_params(labelsize=14)
@@ -185,21 +191,22 @@ from scipy import stats
 
 ### errrorrr ValueError: Data must be positive.
 def BoxCoxofYelpBusinessReviewCount():
+    '''
     biz_file=open('data/yelp_academic_dataset.json')
     biz_df=pd.DataFrame(json.loads(x) for x in biz_file.readlines())
     biz_file.close()
-    
+    '''
     biz_df['review_count'].min()
     rc_log = stats.boxcox(biz_df['review_count'], lmbda=0)
     rc_bc, bc_params = stats.boxcox(biz_df['review_count'])    
     print(bc_params)    
 
-def VisualizingChangesOfReviewCounts():
-    
+def VisualizingChangesOfReviewCounts(biz_df):
+    '''
     biz_file=open('data/yelp_academic_dataset.json')
     biz_df=pd.DataFrame(json.loads(x) for x in biz_file.readlines())
     biz_file.close()
-    
+    '''
     fig, (ax1, ax2, ax3) = plt.subplots(3,1)
     # original review count histogram
     biz_df['review_count'].hist(ax=ax1, bins=100)
@@ -225,12 +232,12 @@ def VisualizingChangesOfReviewCounts():
     ax3.set_xlabel('')
     ax3.set_ylabel('Occurrence', fontsize=14)
     
-def ProbabilityPlotsAginstNormalDistribution():
-
+def ProbabilityPlotsAginstNormalDistribution(biz_df):
+    '''
     biz_file=open('data/yelp_academic_dataset.json')
     biz_df=pd.DataFrame(json.loads(x) for x in biz_file.readlines())
     biz_file.close()
-    
+    '''
     fig2, (ax1, ax2, ax3) = plt.subplots(3,1)
     prob1 = stats.probplot(biz_df['review_count'], dist=stats.norm, plot=ax1)
     ax1.set_xlabel('')
@@ -324,22 +331,33 @@ def interactionfeaturesinPredictions():
 
 if __name__ == '__main__':
     
+###pre_read block
+    print("preparing to read files....")
+    million_songs = pd.read_csv('data/train_triplets.txt.zip', header=None, delimiter='\t')
+    
+    online_popularity = pd.read_csv('data/OnlineNewsPopularity.csv', delimiter=', ', engine='python')
+    
+    biz_file=open('data/yelp_academic_dataset.json')
+    biz_df=pd.DataFrame(json.loads(x) for x in biz_file.readlines())
+    biz_file.close()
+    print("reading finished ....")]
+        
 #    binarization()
-#    visualization()
+    visualization(biz_df)
 #    quantizingwithfixedwidthbins()
-#    quantile_binning()
+#    quantile_binning(biz_df)
 #    binningcountsbyquantiles()
-#    Visualizationoflogtransformation()
+#    Visualizationoflogtransformation(biz_df)
 #    Visualizationoflogtransformation2()
-#    predictbusinessratingsbyLT()
+#    predictbusinessratingsbyLT(biz_df)
 #    predictarticlepopularitybyLT()
 #    visualizingchangeofpopularity()
-#    visualizaingchangeofprediction()
-#    BoxCoxofYelpBusinessReviewCount()
-#    VisualizingChangesOfReviewCounts()
-#    ProbabilityPlotsAginstNormalDistribution()
+#    visualizaingchangeofprediction(biz_df)
+#    BoxCoxofYelpBusinessReviewCount(biz_df)
+#    VisualizingChangesOfReviewCounts(biz_df)
+#    ProbabilityPlotsAginstNormalDistribution(biz_df)
 #    FeatureScaling()
-    interactionfeaturesinPredictions()
+#    interactionfeaturesinPredictions()
     
     
     
