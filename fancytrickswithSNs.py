@@ -10,10 +10,13 @@ simple numbers by going through the examples
 
 import pandas as pd
 
-def binarization():
+def binarization(million_songs):
     #The table contains user-song-count triplets. Only non-zero counts are included.
     #hence, we just need to set the entire count column to 1.
-    listen_count = pd.read_csv('data/train_triplets.txt.zip', header=None, delimiter='\t')
+#   listen_count = pd.read_csv('data/train_triplets.txt.zip', header=None, delimiter='\t')
+    
+#### 二值化处理，听过改歌即标为喜欢，减少计数器的数值差距多大对用户歌曲喜欢的推测
+    listen_count = million_songs    
     listen_count[2] = 1
 
 ## quantization and binning
@@ -29,7 +32,7 @@ def visualization(biz_df):
     biz_file.close()
     '''
 #plot the histogram of the review counts
-    sns.set_style('whitegrid')
+#    sns.set_style('whitegrid')
     fig, ax = plt.subplots()
     biz_df['review_count'].hist(ax=ax, bins=100)
     ax.set_yscale('log')
@@ -38,14 +41,18 @@ def visualization(biz_df):
     ax.set_ylabel('Occurrence', fontsize=14)
 
 # 固定宽度的量化计数
+### 通过除法和log函数对不同规模的数据进行量化分箱
 import numpy as np
 def quantizingwithfixedwidthbins():
     small_counts = np.random.randint(0, 100, 20)
-    np.floor_divide(small_counts, 10)
+    
+# map to bins  0~9 by division
+    print( np.floor_divide(small_counts, 10) )
 
     large_counts = [296, 8286, 64011, 80, 3, 725, 867, 2215, 7689, 11495,
                         91897, 44, 28, 7971, 926, 122, 22222]
-    np.floor(np.log10(large_counts))
+#map to exponential-width bins via log function 
+    print( np.floor(np.log10(large_counts)) )
     
 # 分数位装箱
 def quantile_binning(biz_df):
@@ -55,13 +62,13 @@ def quantile_binning(biz_df):
     biz_file.close()
     '''
     deciles = biz_df['review_count'].quantile([.1, .2, .3, .4, .5, .6, .7, .8, .9])
-    
 ### visualize the deciles on the histogram
-    sns.set_style('whitegrid')
+#    sns.set_style('whitegrid')
     fig, ax = plt.subplots()
     biz_df['review_count'].hist(ax=ax, bins=100)
     for pos in deciles:
         handle = plt.axvline(pos, color='r')
+#       print( handle, [handle])
     ax.legend([handle], ['deciles'], fontsize=14)
     ax.set_yscale('log')
     ax.set_xscale('log')
@@ -69,7 +76,8 @@ def quantile_binning(biz_df):
     ax.set_xlabel('Review Count', fontsize=14)
     ax.set_ylabel('Occurrence', fontsize=14)
 
-def binningcountsbyquantiles():
+def binningcountsByquantiles():
+    
     large_counts = [296, 8286, 64011, 80, 3, 725, 867, 2215, 7689, 11495,
                         91897, 44, 28, 7971, 926, 122, 22222]
     pd.qcut(large_counts, 4, labels=False)
@@ -78,34 +86,37 @@ def binningcountsbyquantiles():
     
     
 ###log Transformation
-def Visualizationoflogtransformation(biz_df):
+def VisualizationOflogtransformation(biz_df):
     '''
     biz_file=open('data/yelp_academic_dataset.json')
     biz_df=pd.DataFrame(json.loads(x) for x in biz_file.readlines())
     biz_file.close()
     '''
     fig, (ax1, ax2) = plt.subplots(2, 1)
+    print( biz_df.keys())
     
     biz_df['review_count'].hist(ax=ax1, bins=100)
     ax1.tick_params(labelsize=14)
     ax1.set_xlabel('review_count', fontsize=14)
     ax1.set_ylabel('Occurence', fontsize=14)
     
-    biz_df['review_count'].hist(ax=ax2, bins=100)
+    biz_df['log_review_count'] = np.log10(biz_df['review_count'] + 1)
+    biz_df['log_review_count'].hist(ax=ax2, bins=100)
     ax2.tick_params(labelsize=14)
-    ax2.set_xlabel('review_count', fontsize=14)
+    ax2.set_xlabel('log10(review_count)', fontsize=14)
     ax2.set_ylabel('Occurence', fontsize=14)
 
-def Visualizationoflogtransformation2():
+def Visualizationoflogtransformation2(df):
     
-    df = pd.read_csv('data/OnlineNewsPopularity.csv', delimiter=', ',engine='python')
-    
+#   df = pd.read_csv('data/OnlineNewsPopularity.csv', delimiter=', ',engine='python')
     fig, (ax1, ax2) = plt.subplots(2,1)
     df['n_tokens_content'].hist(ax=ax1, bins=100)
     ax1.tick_params(labelsize=14)
     ax1.set_xlabel('Number of Words in Article', fontsize=14)
     ax1.set_ylabel('Number of Articles', fontsize=14)
     
+#### log10 计算少加了一个1
+    df['log_n_tokens_content'] = np.log10(df['n_tokens_content']+1)
     df['log_n_tokens_content'].hist(ax=ax2, bins=100)
     ax2.tick_params(labelsize=14)
     ax2.set_xlabel('Log of Number of Words', fontsize=14)
@@ -115,7 +126,7 @@ def Visualizationoflogtransformation2():
 from sklearn import linear_model
 from sklearn.model_selection import cross_val_score
 
-##errorrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr
+##errorrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr stilll
 def predictbusinessratingsbyLT(biz_df):
     '''
     biz_file=open('data/yelp_academic_dataset.json')
@@ -127,6 +138,7 @@ def predictbusinessratingsbyLT(biz_df):
     m_orig = linear_model.LinearRegression()
     scores_orig = cross_val_score(m_orig, biz_df[['review_count']],
                                   biz_df['stars'], cv=10)
+    
     m_log = linear_model.LinearRegression()
     scores_log = cross_val_score(m_log, biz_df[['log_review_count']],
                                  biz_df['stars'], cv=10)
@@ -135,6 +147,7 @@ def predictbusinessratingsbyLT(biz_df):
               (scores_orig.mean(), scores_orig.std() * 2))
     print("R-squared score with log transform: %0.5f (+/- %0.5f)" % 
           (scores_log.mean(), scores_log.std() * 2))
+
 
 def predictarticlepopularitybyLT():
     df = pd.read_csv('data/OnlineNewsPopularity.csv', delimiter=', ', engine='python')
@@ -164,6 +177,7 @@ def visualizingchangeofpopularity():
     ax1.set_xlabel('Number of Words in Article', fontsize=14)
     ax1.set_ylabel('Number of Shares', fontsize=14)
     
+    df['log_n_tokens_content'] = np.log10(df['n_tokens_content']+1)
     ax2.scatter(df['log_n_tokens_content'], df['shares'])
     ax2.tick_params(labelsize=14)
     ax2.set_xlabel('Log of the Number of Words in Article', fontsize=14)
@@ -181,6 +195,7 @@ def visualizaingchangeofprediction(biz_df):
     ax1.set_xlabel('Review Count', fontsize=14)
     ax1.set_ylabel('Average Star Rating', fontsize=14)
     
+    biz_df['log_review_count'] = np.log10(biz_df['review_count']+1)
     ax2.scatter(biz_df['log_review_count'], biz_df['stars'])
     ax2.tick_params(labelsize=14)
     ax2.set_xlabel('Log of Review Count', fontsize=14)
@@ -190,14 +205,15 @@ def visualizaingchangeofprediction(biz_df):
 from scipy import stats
 
 ### errrorrr ValueError: Data must be positive.
-def BoxCoxofYelpBusinessReviewCount():
+def BoxCoxofYelpBusinessReviewCount(biz_df):
     '''
     biz_file=open('data/yelp_academic_dataset.json')
     biz_df=pd.DataFrame(json.loads(x) for x in biz_file.readlines())
     biz_file.close()
     '''
+####数据问题，不可以出现0 
     biz_df['review_count'].min()
-    rc_log = stats.boxcox(biz_df['review_count'], lmbda=0)
+    rc_log = stats.boxcox(biz_df['review_count'], lmbda=0)  
     rc_bc, bc_params = stats.boxcox(biz_df['review_count'])    
     print(bc_params)    
 
@@ -207,6 +223,8 @@ def VisualizingChangesOfReviewCounts(biz_df):
     biz_df=pd.DataFrame(json.loads(x) for x in biz_file.readlines())
     biz_file.close()
     '''
+    print(biz_df.keys())
+
     fig, (ax1, ax2, ax3) = plt.subplots(3,1)
     # original review count histogram
     biz_df['review_count'].hist(ax=ax1, bins=100)
@@ -216,6 +234,7 @@ def VisualizingChangesOfReviewCounts(biz_df):
     ax1.set_xlabel('')
     ax1.set_ylabel('Occurrence', fontsize=14)
     
+### 上一个函数  rc_log 和 rc_bc都没计算出来
     # review count after log transform
     biz_df['rc_log'].hist(ax=ax2, bins=100)
     ax2.set_yscale('log')
@@ -231,7 +250,8 @@ def VisualizingChangesOfReviewCounts(biz_df):
     ax3.set_title('Box-Cox Transformed Counts Histogram', fontsize=14)
     ax3.set_xlabel('')
     ax3.set_ylabel('Occurrence', fontsize=14)
-    
+
+
 def ProbabilityPlotsAginstNormalDistribution(biz_df):
     '''
     biz_file=open('data/yelp_academic_dataset.json')
@@ -242,6 +262,7 @@ def ProbabilityPlotsAginstNormalDistribution(biz_df):
     prob1 = stats.probplot(biz_df['review_count'], dist=stats.norm, plot=ax1)
     ax1.set_xlabel('')
     ax1.set_title('Probplot against normal distribution')
+#### 同上 没有rc_log 和rc_bc列
     prob2 = stats.probplot(biz_df['rc_log'], dist=stats.norm, plot=ax2)
     ax2.set_xlabel('')
     ax2.set_title('Probplot after log transform')
@@ -305,7 +326,8 @@ def interactionfeaturesinPredictions():
     
     df = pd.read_csv('data/OnlineNewsPopularity.csv', delimiter=', ', engine='python')
     print(df.columns)
-'''
+
+#### 数据源中缺少 features 数据列
     X = df[features]
     y = df[['shares']]
     
@@ -327,30 +349,30 @@ def interactionfeaturesinPredictions():
     (m2, r2) = evaluate_feature(X2_train, X2_test, y_train, y_test)
     print("R-squared score with singleton features: %0.5f" % r1)
     print("R-squared score with pairwise features: %0.10f" % r2)
- '''   
+  
 
 if __name__ == '__main__':
     
 ###pre_read block
     print("preparing to read files....")
-    million_songs = pd.read_csv('data/train_triplets.txt.zip', header=None, delimiter='\t')
+#    million_songs = pd.read_csv('data/train_triplets.txt.zip', header=None, delimiter='\t')
     
-    online_popularity = pd.read_csv('data/OnlineNewsPopularity.csv', delimiter=', ', engine='python')
+#    online_popularity = pd.read_csv('data/OnlineNewsPopularity.csv', delimiter=', ', engine='python')
     
     biz_file=open('data/yelp_academic_dataset.json')
     biz_df=pd.DataFrame(json.loads(x) for x in biz_file.readlines())
     biz_file.close()
-    print("reading finished ....")]
+    print("reading finished ....")
         
-#    binarization()
-    visualization(biz_df)
+#    binarization(million_songs)
+#    visualization(biz_df)
 #    quantizingwithfixedwidthbins()
 #    quantile_binning(biz_df)
-#    binningcountsbyquantiles()
-#    Visualizationoflogtransformation(biz_df)
-#    Visualizationoflogtransformation2()
+#    binningcountsByquantiles()
+#    VisualizationOflogtransformation(biz_df)
+#    Visualizationoflogtransformation2(online_popularity)
 #    predictbusinessratingsbyLT(biz_df)
-#    predictarticlepopularitybyLT()
+#     predictarticlepopularitybyLT()
 #    visualizingchangeofpopularity()
 #    visualizaingchangeofprediction(biz_df)
 #    BoxCoxofYelpBusinessReviewCount(biz_df)
